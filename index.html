@@ -1,1014 +1,541 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🦆 Kaczka kontra Kapitalizm</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>UCIEKAJ PRZED PARAGONEM</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+    * {
+        box-sizing: border-box;
+    }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 50% 15%, #293b70, #080c18 70%);
-  color: white;
-  font-family: system-ui, sans-serif;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: #171717;
+        color: white;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
 
-.wrap {
-  width: min(960px, 96vw);
-}
+    #game {
+        width: 420px;
+        max-width: 95vw;
+        height: 700px;
+        max-height: 95vh;
+        background: linear-gradient(#75c9ff, #dff7ff);
+        border: 6px solid white;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 40px rgba(255,255,255,.15);
+    }
 
-.top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
+    #hud {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 18px;
+        font-weight: bold;
+        background: rgba(0,0,0,.25);
+        z-index: 10;
+    }
 
-h1 {
-  margin: 0;
-  font-size: clamp(20px, 4vw, 36px);
-}
+    #player {
+        position: absolute;
+        bottom: 25px;
+        left: 180px;
+        font-size: 55px;
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        z-index: 5;
+        user-select: none;
+    }
 
-.hud {
-  display: flex;
-  gap: 8px;
-}
+    .item {
+        position: absolute;
+        font-size: 42px;
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        user-select: none;
+    }
 
-.pill {
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: #141c32;
-  border: 1px solid #405075;
-  font-weight: 800;
-}
+    #startScreen {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.82);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 25px;
+        z-index: 100;
+    }
 
-canvas {
-  width: 100%;
-  display: block;
-  border-radius: 18px;
-  border: 2px solid #536993;
-  background: #10182b;
-  box-shadow: 0 20px 70px #0009;
-}
+    #startScreen h1 {
+        font-size: 38px;
+        margin: 0 0 10px;
+        transform: rotate(-2deg);
+    }
 
-.help {
-  text-align: center;
-  opacity: .75;
-  margin-top: 10px;
-  font-size: 14px;
-}
+    #startScreen p {
+        font-size: 18px;
+        line-height: 1.5;
+    }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: #02040dcc;
-  backdrop-filter: blur(6px);
-}
+    button {
+        margin-top: 20px;
+        border: none;
+        border-radius: 14px;
+        padding: 16px 25px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        background: #ffe600;
+        color: #111;
+        box-shadow: 0 5px 0 #b6a400;
+    }
 
-.card {
-  width: min(520px, 90vw);
-  padding: 30px;
-  text-align: center;
-  border-radius: 24px;
-  background: #11182d;
-  border: 1px solid #536993;
-  box-shadow: 0 25px 100px #000b;
-}
+    button:active {
+        transform: translateY(4px);
+        box-shadow: 0 1px 0 #b6a400;
+    }
 
-.card h2 {
-  font-size: 30px;
-  margin-top: 0;
-}
+    #message {
+        position: absolute;
+        top: 45%;
+        width: 100%;
+        text-align: center;
+        font-size: 30px;
+        font-weight: bold;
+        text-shadow: 3px 3px 0 black;
+        pointer-events: none;
+        z-index: 50;
+    }
 
-.card p {
-  line-height: 1.6;
-  opacity: .9;
-}
+    .hidden {
+        display: none !important;
+    }
 
-button {
-  border: 0;
-  border-radius: 15px;
-  padding: 15px 25px;
-  font-size: 18px;
-  font-weight: 900;
-  cursor: pointer;
-  background: #ffe66d;
-  color: #17130a;
-  box-shadow: 0 8px 0 #b59b27;
-  transition: transform .08s, box-shadow .08s;
-}
+    .shake {
+        animation: shake .2s;
+    }
 
-button:hover {
-  transform: translateY(-2px);
-}
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        50% { transform: translateX(10px); }
+        75% { transform: translateX(-10px); }
+        100% { transform: translateX(0); }
+    }
 
-button:active {
-  transform: translateY(5px);
-  box-shadow: 0 3px 0 #b59b27;
-}
-
-.hidden {
-  display: none !important;
-}
+    #instructions {
+        position: absolute;
+        bottom: 5px;
+        width: 100%;
+        text-align: center;
+        font-size: 12px;
+        color: rgba(0,0,0,.5);
+    }
 </style>
-
 </head>
 
 <body>
 
-<div class="wrap">
+<div id="game">
 
-  <div class="top">
+    <div id="hud">
+        <div>🥔 Ziemniak: <span id="score">0</span></div>
+        <div>❤️ <span id="lives">3</span></div>
+    </div>
 
-```
-<h1>🦆 KACZKA KONTRA KAPITALIZM</h1>
+    <div id="player">🥔</div>
 
-<div class="hud">
-  <div class="pill">💸 <span id="score">0</span></div>
-  <div class="pill">❤️ <span id="hp">3</span></div>
-  <div class="pill">⏱️ <span id="time">0</span></div>
-</div>
-```
+    <div id="message"></div>
 
-  </div>
+    <div id="instructions">
+        ← → / A D — uciekaj
+    </div>
 
-<canvas id="game" width="960" height="540"></canvas>
+    <div id="startScreen">
 
-  <div class="help">
-    WASD / strzałki — ruch · Z — turbo · Space — pauza
-  </div>
+        <h1>🥔 UCIEKAJ PRZED PARAGONEM</h1>
 
-</div>
+        <p>
+            Jesteś zwykłym ziemniakiem.<br><br>
+            Zbieraj <b>💸 🍺 🧀</b><br>
+            Unikaj <b>🧾 👨‍💼</b><br><br>
+            Nie pytaj dlaczego.
+        </p>
 
-<div class="overlay" id="overlay">
+        <button id="startButton">ROZPOCZNIJ CHAOS</button>
 
-  <div class="card">
-
-```
-<h2 id="title">🦆 Państwo kontra Kaczka</h2>
-
-<p id="message">
-  System wykrył zbyt wysoką produktywność.
-  Zbieraj pieniądze i uciekaj przed kontrolą skarbową.
-</p>
-
-<button id="startButton" type="button">
-  ODPAL KACZKĘ 🦆
-</button>
-```
-
-  </div>
+    </div>
 
 </div>
 
 <script>
 
-"use strict";
-
-
-/* =========================
-   ELEMENTY
-========================= */
-
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-
-const overlay = document.getElementById("overlay");
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+const scoreElement = document.getElementById("score");
+const livesElement = document.getElementById("lives");
+const startScreen = document.getElementById("startScreen");
 const startButton = document.getElementById("startButton");
-
-const title = document.getElementById("title");
 const message = document.getElementById("message");
 
-const scoreElement = document.getElementById("score");
-const hpElement = document.getElementById("hp");
-const timeElement = document.getElementById("time");
-
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
-
-
-/* =========================
-   STAN GRY
-========================= */
-
-let gameRunning = false;
-let gamePaused = false;
-
-let lastTime = 0;
-
+let playerX = 180;
 let score = 0;
-let hp = 3;
-let elapsed = 0;
+let lives = 3;
+let running = false;
 
-let turbo = 0;
-let spawnTimer = 0;
-let screenShake = 0;
+let keys = {
+    left: false,
+    right: false
+};
 
-const keys = {};
+let objects = [];
 
-let duck;
+let spawnTimer = null;
+let gameTimer = null;
 
-let money = [];
-let taxPapers = [];
-let particles = [];
+const goodItems = ["💸", "🍺", "🧀", "🍕", "🥤"];
+const badItems = ["🧾", "👨‍💼", "📄", "💀", "🏦"];
 
 
-/* =========================
-   KLAWIATURA
-========================= */
+// -------------------------
+// START
+// -------------------------
 
-window.addEventListener("keydown", function(event) {
+startButton.addEventListener("click", startGame);
 
-  keys[event.key.toLowerCase()] = true;
-
-  if (event.code === "Space") {
-
-    event.preventDefault();
-
-    if (gameRunning) {
-      gamePaused = !gamePaused;
-    }
-
-  }
-
-});
-
-
-window.addEventListener("keyup", function(event) {
-
-  keys[event.key.toLowerCase()] = false;
-
-});
-
-
-/* =========================
-   POMOCNICZE
-========================= */
-
-function random(min, max) {
-  return min + Math.random() * (max - min);
-}
-
-
-function distance(a, b) {
-  return Math.hypot(
-    a.x - b.x,
-    a.y - b.y
-  );
-}
-
-
-function updateHUD() {
-
-  scoreElement.textContent = score;
-  hpElement.textContent = hp;
-  timeElement.textContent = Math.floor(elapsed);
-
-}
-
-
-/* =========================
-   OBIEKTY
-========================= */
-
-function createMoney() {
-
-  money.push({
-    x: random(40, WIDTH - 40),
-    y: random(70, HEIGHT - 40),
-    radius: 15,
-    rotation: random(0, Math.PI * 2)
-  });
-
-}
-
-
-function createTaxPaper() {
-
-  const side = Math.floor(random(0, 4));
-
-  const paper = {
-    x: 0,
-    y: 0,
-    vx: 0,
-    vy: 0,
-    radius: 22
-  };
-
-
-  if (side === 0) {
-
-    paper.x = random(0, WIDTH);
-    paper.y = -40;
-    paper.vy = random(70, 120);
-
-  }
-
-  else if (side === 1) {
-
-    paper.x = random(0, WIDTH);
-    paper.y = HEIGHT + 40;
-    paper.vy = -random(70, 120);
-
-  }
-
-  else if (side === 2) {
-
-    paper.x = -40;
-    paper.y = random(0, HEIGHT);
-    paper.vx = random(70, 120);
-
-  }
-
-  else {
-
-    paper.x = WIDTH + 40;
-    paper.y = random(0, HEIGHT);
-    paper.vx = -random(70, 120);
-
-  }
-
-
-  taxPapers.push(paper);
-
-}
-
-
-function createParticles(x, y, amount) {
-
-  for (let i = 0; i < amount; i++) {
-
-    particles.push({
-      x: x,
-      y: y,
-      vx: random(-150, 150),
-      vy: random(-150, 150),
-      life: random(.3, .8),
-      size: random(2, 6)
-    });
-
-  }
-
-}
-
-
-/* =========================
-   RESET
-========================= */
-
-function resetGame() {
-
-  score = 0;
-  hp = 3;
-  elapsed = 0;
-
-  turbo = 0;
-  spawnTimer = 0;
-  screenShake = 0;
-
-  gamePaused = false;
-
-  duck = {
-    x: WIDTH / 2,
-    y: HEIGHT / 2,
-    vx: 0,
-    vy: 0,
-    radius: 25
-  };
-
-  money = [];
-  taxPapers = [];
-  particles = [];
-
-
-  for (let i = 0; i < 8; i++) {
-    createMoney();
-  }
-
-
-  for (let i = 0; i < 2; i++) {
-    createTaxPaper();
-  }
-
-
-  updateHUD();
-
-}
-
-
-/* =========================
-   START GRY
-========================= */
 
 function startGame() {
 
-  console.log("Kaczka startuje!");
+    startScreen.classList.add("hidden");
 
-  resetGame();
+    score = 0;
+    lives = 3;
+    playerX = 180;
 
-  gameRunning = true;
+    scoreElement.textContent = score;
+    livesElement.textContent = lives;
 
-  overlay.classList.add("hidden");
+    player.style.left = playerX + "px";
 
-  startButton.blur();
+    clearObjects();
 
-  lastTime = performance.now();
+    running = true;
 
-  requestAnimationFrame(gameLoop);
+    message.textContent = "";
 
+    startSpawning();
+    gameLoop();
 }
 
 
-/* =========================
-   KONIEC
-========================= */
+// -------------------------
+// STEROWANIE
+// -------------------------
 
-function gameOver() {
+document.addEventListener("keydown", function(e) {
 
-  gameRunning = false;
+    if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
+        keys.left = true;
+    }
 
-  title.textContent =
-    "🦆 Kaczka została zoptymalizowana";
-
-  message.textContent =
-    "Wynik: " +
-    score +
-    " 💸 | Czas: " +
-    Math.floor(elapsed) +
-    " sekund. " +
-    "Korporacja jest dumna. Niestety z ciebie nie.";
-
-  startButton.textContent =
-    "JESZCZE RAZ 🦆";
-
-  overlay.classList.remove("hidden");
-
-}
-
-
-/* =========================
-   PRZYCISK START
-========================= */
-
-startButton.addEventListener("click", function(event) {
-
-  event.preventDefault();
-
-  startGame();
+    if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
+        keys.right = true;
+    }
 
 });
 
 
-/* =========================
-   PĘTLA GRY
-========================= */
+document.addEventListener("keyup", function(e) {
 
-function gameLoop(currentTime) {
+    if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
+        keys.left = false;
+    }
 
-  if (!gameRunning) {
-    return;
-  }
+    if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
+        keys.right = false;
+    }
+
+});
 
 
-  const delta =
-    Math.min(
-      0.033,
-      (currentTime - lastTime) / 1000
+// -------------------------
+// SPAWN
+// -------------------------
+
+function startSpawning() {
+
+    clearInterval(spawnTimer);
+
+    spawnTimer = setInterval(function() {
+
+        if (!running) return;
+
+        spawnObject();
+
+    }, 650);
+}
+
+
+function spawnObject() {
+
+    const element = document.createElement("div");
+
+    element.className = "item";
+
+    const isGood = Math.random() < 0.6;
+
+    if (isGood) {
+        element.textContent =
+            goodItems[Math.floor(Math.random() * goodItems.length)];
+    } else {
+        element.textContent =
+            badItems[Math.floor(Math.random() * badItems.length)];
+    }
+
+    const x = Math.random() * 350;
+
+    element.style.left = x + "px";
+    element.style.top = "-60px";
+
+    game.appendChild(element);
+
+    objects.push({
+        element: element,
+        x: x,
+        y: -60,
+        speed: 3 + Math.random() * 3,
+        good: isGood
+    });
+}
+
+
+// -------------------------
+// GAME LOOP
+// -------------------------
+
+function gameLoop() {
+
+    if (!running) return;
+
+    movePlayer();
+    moveObjects();
+    checkCollisions();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+// -------------------------
+// GRACZ
+// -------------------------
+
+function movePlayer() {
+
+    if (keys.left) {
+        playerX -= 7;
+    }
+
+    if (keys.right) {
+        playerX += 7;
+    }
+
+    if (playerX < 0) {
+        playerX = 0;
+    }
+
+    if (playerX > 350) {
+        playerX = 350;
+    }
+
+    player.style.left = playerX + "px";
+}
+
+
+// -------------------------
+// OBIEKTY
+// -------------------------
+
+function moveObjects() {
+
+    for (let i = objects.length - 1; i >= 0; i--) {
+
+        const obj = objects[i];
+
+        obj.y += obj.speed;
+
+        obj.element.style.top = obj.y + "px";
+
+        if (obj.y > 720) {
+
+            obj.element.remove();
+
+            objects.splice(i, 1);
+
+            continue;
+        }
+    }
+}
+
+
+// -------------------------
+// KOLIZJE
+// -------------------------
+
+function checkCollisions() {
+
+    const playerRect = player.getBoundingClientRect();
+
+    for (let i = objects.length - 1; i >= 0; i--) {
+
+        const obj = objects[i];
+
+        const rect = obj.element.getBoundingClientRect();
+
+        if (isColliding(playerRect, rect)) {
+
+            if (obj.good) {
+
+                collectGood();
+
+            } else {
+
+                hitBad();
+
+            }
+
+            obj.element.remove();
+
+            objects.splice(i, 1);
+        }
+    }
+}
+
+
+function isColliding(a, b) {
+
+    return !(
+        a.right < b.left ||
+        a.left > b.right ||
+        a.bottom < b.top ||
+        a.top > b.bottom
     );
+}
 
 
-  lastTime = currentTime;
+// -------------------------
+// DOBRE
+// -------------------------
 
+function collectGood() {
 
-  if (!gamePaused) {
+    score++;
 
-    update(delta);
+    scoreElement.textContent = score;
 
-  }
+    message.textContent = "+1 🤑";
 
+    setTimeout(function() {
 
-  draw();
+        if (running) {
+            message.textContent = "";
+        }
 
-
-  requestAnimationFrame(gameLoop);
+    }, 300);
 
 }
 
 
-/* =========================
-   UPDATE
-========================= */
+// -------------------------
+// ZŁE
+// -------------------------
 
-function update(delta) {
+function hitBad() {
 
-  elapsed += delta;
+    lives--;
 
-  spawnTimer += delta;
+    livesElement.textContent = lives;
 
+    game.classList.remove("shake");
 
-  /*
-    Im dłużej żyjesz,
-    tym szybciej państwo produkuje papier.
-  */
+    void game.offsetWidth;
 
-  const spawnDelay =
-    Math.max(
-      .3,
-      1.2 - elapsed * .01
-    );
+    game.classList.add("shake");
 
+    message.textContent = "PARAGON CIĘ DOPADŁ 😭";
 
-  if (spawnTimer >= spawnDelay) {
+    setTimeout(function() {
 
-    spawnTimer = 0;
+        if (running) {
+            message.textContent = "";
+        }
 
-    createMoney();
+    }, 600);
 
-    if (Math.random() < .7) {
-      createTaxPaper();
-    }
+    if (lives <= 0) {
 
-  }
-
-
-  /* Ruch */
-
-  let horizontal = 0;
-  let vertical = 0;
-
-
-  if (
-    keys["d"] ||
-    keys["arrowright"]
-  ) {
-    horizontal++;
-  }
-
-
-  if (
-    keys["a"] ||
-    keys["arrowleft"]
-  ) {
-    horizontal--;
-  }
-
-
-  if (
-    keys["s"] ||
-    keys["arrowdown"]
-  ) {
-    vertical++;
-  }
-
-
-  if (
-    keys["w"] ||
-    keys["arrowup"]
-  ) {
-    vertical--;
-  }
-
-
-  /* Turbo */
-
-  if (
-    keys["z"] &&
-    turbo <= 0
-  ) {
-
-    turbo = 2;
-
-  }
-
-
-  if (turbo > 0) {
-    turbo -= delta;
-  }
-
-
-  const speed =
-    turbo > 0
-      ? 560
-      : 230;
-
-
-  const vectorLength =
-    Math.hypot(
-      horizontal,
-      vertical
-    ) || 1;
-
-
-  duck.vx =
-    horizontal / vectorLength * speed;
-
-  duck.vy =
-    vertical / vectorLength * speed;
-
-
-  duck.x += duck.vx * delta;
-  duck.y += duck.vy * delta;
-
-
-  /* Granice */
-
-  duck.x =
-    Math.max(
-      duck.radius,
-      Math.min(
-        WIDTH - duck.radius,
-        duck.x
-      )
-    );
-
-
-  duck.y =
-    Math.max(
-      55,
-      Math.min(
-        HEIGHT - duck.radius,
-        duck.y
-      )
-    );
-
-
-  /* Pieniądze */
-
-  for (
-    let i = money.length - 1;
-    i >= 0;
-    i--
-  ) {
-
-    const coin = money[i];
-
-    coin.rotation += delta * 5;
-
-
-    if (
-      distance(duck, coin) <
-      duck.radius + coin.radius
-    ) {
-
-      score += 10;
-
-      createParticles(
-        coin.x,
-        coin.y,
-        12
-      );
-
-      money.splice(i, 1);
+        endGame();
 
     }
-
-  }
-
-
-  /* Urząd Skarbowy */
-
-  for (
-    let i = taxPapers.length - 1;
-    i >= 0;
-    i--
-  ) {
-
-    const paper = taxPapers[i];
-
-    paper.x += paper.vx * delta;
-    paper.y += paper.vy * delta;
-
-
-    if (
-      distance(duck, paper) <
-      duck.radius + paper.radius
-    ) {
-
-      hp--;
-
-      screenShake = .3;
-
-      createParticles(
-        duck.x,
-        duck.y,
-        20
-      );
-
-      taxPapers.splice(i, 1);
-
-
-      if (hp <= 0) {
-
-        updateHUD();
-
-        gameOver();
-
-        return;
-
-      }
-
-    }
-
-
-    if (
-      paper.x < -80 ||
-      paper.x > WIDTH + 80 ||
-      paper.y < -80 ||
-      paper.y > HEIGHT + 80
-    ) {
-
-      taxPapers.splice(i, 1);
-
-    }
-
-  }
-
-
-  /* Cząsteczki */
-
-  for (
-    let i = particles.length - 1;
-    i >= 0;
-    i--
-  ) {
-
-    const particle = particles[i];
-
-    particle.x += particle.vx * delta;
-    particle.y += particle.vy * delta;
-
-    particle.life -= delta;
-
-
-    if (particle.life <= 0) {
-
-      particles.splice(i, 1);
-
-    }
-
-  }
-
-
-  screenShake =
-    Math.max(
-      0,
-      screenShake - delta
-    );
-
-
-  updateHUD();
-
 }
 
 
-/* =========================
-   RYSOWANIE
-========================= */
+// -------------------------
+// KONIEC
+// -------------------------
 
-function draw() {
+function endGame() {
 
-  ctx.save();
+    running = false;
 
+    clearInterval(spawnTimer);
 
-  if (screenShake > 0) {
+    message.textContent = "";
 
-    ctx.translate(
-      random(-6, 6),
-      random(-6, 6)
-    );
+    startScreen.classList.remove("hidden");
 
-  }
+    startScreen.querySelector("h1").textContent =
+        "💀 ZIEMNIAK ZBANKRUTOWAŁ";
 
+    startScreen.querySelector("p").innerHTML =
+        "Twój wynik: <b>" + score + "</b><br><br>" +
+        "Państwo wygrało.";
 
-  /* Tło */
-
-  const background =
-    ctx.createLinearGradient(
-      0,
-      0,
-      0,
-      HEIGHT
-    );
-
-  background.addColorStop(
-    0,
-    "#172443"
-  );
-
-  background.addColorStop(
-    1,
-    "#0b1224"
-  );
-
-
-  ctx.fillStyle = background;
-
-  ctx.fillRect(
-    0,
-    0,
-    WIDTH,
-    HEIGHT
-  );
-
-
-  /* Linie */
-
-  ctx.globalAlpha = .12;
-
-  ctx.strokeStyle = "#a8bbff";
-
-  for (let i = 0; i < 20; i++) {
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      i * 60,
-      0
-    );
-
-    ctx.lineTo(
-      i * 60 - 200,
-      HEIGHT
-    );
-
-    ctx.stroke();
-
-  }
-
-  ctx.globalAlpha = 1;
-
-
-  /* Pieniądze */
-
-  money.forEach(coin => {
-
-    ctx.save();
-
-    ctx.translate(
-      coin.x,
-      coin.y
-    );
-
-    ctx.rotate(
-      coin.rotation
-    );
-
-    ctx.font = "28px serif";
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    ctx.fillText(
-      "💰",
-      0,
-      0
-    );
-
-    ctx.restore();
-
-  });
-
-
-  /* Dokumenty */
-
-  taxPapers.forEach(paper => {
-
-    ctx.save();
-
-    ctx.translate(
-      paper.x,
-      paper.y
-    );
-
-    ctx.rotate(
-      Math.atan2(
-        paper.vy,
-        paper.vx
-      )
-    );
-
-    ctx.font = "36px serif";
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    ctx.fillText(
-      "📑",
-      0,
-      0
-    );
-
-    ctx.restore();
-
-  });
-
-
-  /* Cząsteczki */
-
-  particles.forEach(particle => {
-
-    ctx.globalAlpha =
-      Math.max(
-        0,
-        particle.life
-      );
-
-    ctx.fillStyle =
-      "#ffe66d";
-
-    ctx.fillRect(
-      particle.x,
-      particle.y,
-      particle.size,
-      particle.size
-    );
-
-  });
-
-
-  ctx.globalAlpha = 1;
-
-
-  /* Kaczka */
-
-  ctx.save();
-
-  ctx.translate(
-    duck.x,
-    duck.y
-  );
-
-
-  const tilt =
-    duck.vx * .0007;
-
-
-  ctx.rotate(tilt);
-
-
-  ctx.font = "54px serif";
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-
-  ctx.fillText(
-    turbo > 0
-      ? "🦆💨"
-      : "🦆",
-    0,
-    0
-  );
-
-
-  ctx.restore();
-
-
-  /* Pauza */
-
-  if (gamePaused) {
-
-    ctx.fillStyle = "#fff";
-
-    ctx.font =
-      "900 24px system-ui";
-
-    ctx.textAlign = "center";
-
-    ctx.fillText(
-      "⏸ PAUZA",
-      WIDTH / 2,
-      45
-    );
-
-  }
-
-
-  ctx.restore();
-
+    startButton.textContent = "SPRÓBUJ JESZCZE RAZ";
 }
 
 
-/* =========================
-   PIERWSZE RYSOWANIE
-========================= */
+// -------------------------
+// CZYSZCZENIE
+// -------------------------
 
-resetGame();
+function clearObjects() {
 
-draw();
+    objects.forEach(function(obj) {
+
+        obj.element.remove();
+
+    });
+
+    objects = [];
+}
 
 </script>
 
