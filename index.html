@@ -1,0 +1,59 @@
+<!doctype html>
+
+<html lang="pl"> <head> <meta charset="utf-8"> <meta name="viewport" content="width=device-width,initial-scale=1"> <title>Kaczka kontra Kapitalizm</title>
+
+<style> :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #fff; background: #0b1020; } * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle at 50% 20%, #26345e, #0b1020 65%); overflow: hidden; } .wrap { width: min(960px, 96vw); text-align: center; } .top { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 8px 0 10px; font-weight: 800; } h1 { font-size: clamp(22px, 4vw, 38px); margin: 0; } .hud { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; } .pill { background: #151d35; border: 1px solid #33405f; border-radius: 999px; padding: 7px 12px; } canvas { width: 100%; aspect-ratio: 16 / 9; display: block; border: 2px solid #52658f; border-radius: 18px; background: #111a2f; box-shadow: 0 18px 60px #0008; touch-action: none; } .help { opacity: .75; font-size: 14px; margin: 10px; } .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: #050816b8; backdrop-filter: blur(5px); } .card { width: min(520px, 90vw); padding: 28px; border: 1px solid #4c5f8d; border-radius: 24px; background: #11182d; box-shadow: 0 20px 80px #0009; } button { cursor: pointer; border: 0; border-radius: 14px; padding: 13px 20px; font-size: 17px; font-weight: 900; background: #ffe66d; color: #18140a; } small { opacity: .7; } </style>
+
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="top">
+
+<h1>🦆 KACZKA KONTRA KAPITALIZM</h1>
+
+<div class="hud">
+  <div class="pill">💸 <span id="score">0</span></div>
+  <div class="pill">❤️ <span id="hp">3</span></div>
+  <div class="pill">⏱️ <span id="time">0</span>s</div>
+</div>
+
+</div>
+
+<canvas id="game" width="960" height="540"></canvas>
+
+<div class="help"> WASD / strzałki = ruch · Z = turbo-kaczka · zbieraj 💰 · uciekaj przed 📑 · Space = pauza </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+
+<div class="card">
+
+<h2 id="title">Państwo kontra Kaczka</h2>
+
+<p id="msg">
+  System wykrył zbyt wysoką produktywność.
+  Twoim zadaniem jest zebrać jak najwięcej pieniędzy,
+  zanim Urząd Skarbowy zauważy, że istniejesz.
+</p>
+
+<button id="start">
+  ODPAL KACZKĘ 🦆
+</button>
+
+<p>
+  <small>
+    Gra działa bez bibliotek i bez internetu.
+  </small>
+</p>
+
+</div>
+
+</div>
+
+<script> const canvas = document.getElementById("game"); const ctx = canvas.getContext("2d"); const W = canvas.width; const H = canvas.height; const scoreEl = document.getElementById("score"); const hpEl = document.getElementById("hp"); const timeEl = document.getElementById("time"); let keys = {}; let running = false; let paused = false; let last = 0; let score = 0; let hp = 3; let elapsed = 0; let turbo = 0; let shake = 0; let spawn = 0; let duck = { x: W / 2, y: H / 2, vx: 0, vy: 0, r: 23 }; let money = []; let papers = []; let particles = []; addEventListener("keydown", e => { keys[e.key.toLowerCase()] = true; if (e.code === "Space") { paused = !paused; } e.preventDefault(); }); addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; }); function random(a, b) { return a + Math.random() * (b - a); } function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); } function spawnMoney() { money.push({ x: random(35, W - 35), y: random(60, H - 35), r: 14, spin: random(0, 7) }); } function spawnPaper() { const side = Math.floor(random(0, 4)); const paper = { x: 0, y: 0, vx: 0, vy: 0, r: 20 }; if (side < 2) { paper.x = random(20, W - 20); paper.y = side ? H + 25 : -25; paper.vy = side ? -random(60, 110) : random(60, 110); } else { paper.y = random(40, H - 20); paper.x = side === 2 ? -25 : W + 25; paper.vx = side === 2 ? random(60, 110) : -random(60, 110); } papers.push(paper); } function burst(x, y, count = 12) { for (let i = 0; i < count; i++) { particles.push({ x, y, vx: random(-120, 120), vy: random(-120, 120), life: random(.3, .8), size: random(2, 6), time: 0 }); } } function reset() { score = 0; hp = 3; elapsed = 0; turbo = 0; spawn = 0; duck = { x: W / 2, y: H / 2, vx: 0, vy: 0, r: 23 }; money = []; papers = []; particles = []; for (let i = 0; i < 7; i++) { spawnMoney(); } for (let i = 0; i < 2; i++) { spawnPaper(); } updateHud(); } function updateHud() { scoreEl.textContent = score; hpEl.textContent = hp; timeEl.textContent = Math.floor(elapsed); } function gameOver() { running = false; document.getElementById("title").textContent = "Kaczka została zoptymalizowana"; document.getElementById("msg").textContent = "Wynik: " + score + " 💸 · Czas: " + Math.floor(elapsed) + " s. Korporacja jest dumna. Niestety z ciebie nie."; document.getElementById("start").textContent = "JESZCZE RAZ"; document.getElementById("overlay").style.display = "grid"; } function startGame() { reset(); running = true; paused = false; document.getElementById("overlay").style.display = "none"; last = performance.now(); requestAnimationFrame(loop); } document.getElementById("start").onclick = startGame; function loop(time) { if (!running) { return; } const dt = Math.min(.033, (time - last) / 1000); last = time; if (!paused) { update(dt); } draw(); requestAnimationFrame(loop); } function update(dt) { elapsed += dt; spawn += dt; if ( spawn > Math.max(.32, 1.2 - elapsed * .012) ) { spawn = 0; spawnMoney(); if (Math.random() < .65) { spawnPaper(); } } let ax = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0); let ay = (keys.s || keys.arrowdown ? 1 : 0) - (keys.w || keys.arrowup ? 1 : 0); if (keys.z && turbo <= 0) { turbo = 2.2; } const boost = turbo > 0 ? 2.5 : 1; const speed = 230 * boost; if (turbo > 0) { turbo -= dt; } const length = Math.hypot(ax, ay) || 1; duck.vx = ax / length * speed; duck.vy = ay / length * speed; duck.x += duck.vx * dt; duck.y += duck.vy * dt; duck.x = Math.max(25, Math.min(W - 25, duck.x)); duck.y = Math.max(55, Math.min(H - 25, duck.y)); // Pieniądze for (let i = money.length - 1; i >= 0; i--) { const m = money[i]; m.spin += dt * 5; if (distance(duck, m) < duck.r + m.r) { score += 10; burst(m.x, m.y, 10); money.splice(i, 1); } } // Urząd Skarbowy for (let i = papers.length - 1; i >= 0; i--) { const p = papers[i]; p.x += p.vx * dt; p.y += p.vy * dt; if (distance(duck, p) < duck.r + p.r) { hp--; shake = .25; burst(duck.x, duck.y, 18); papers.splice(i, 1); if (hp <= 0) { updateHud(); gameOver(); return; } } else if ( p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60 ) { papers.splice(i, 1); } } // Cząsteczki for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.time += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; if (p.life <= 0) { particles.splice(i, 1); } } shake = Math.max(0, shake - dt); updateHud(); } function draw() { ctx.save(); if (shake > 0) { ctx.translate( random(-5, 5), random(-5, 5) ); } // Tło const gradient = ctx.createLinearGradient(0, 0, 0, H); gradient.addColorStop(0, "#172443"); gradient.addColorStop(1, "#0d1427"); ctx.fillStyle = gradient; ctx.fillRect(0, 0, W, H); // Dziwne linie kapitalizmu ctx.globalAlpha = .12; ctx.strokeStyle = "#9fb5ff"; for (let i = 0; i < 18; i++) { ctx.beginPath(); ctx.moveTo(i * 60, 0); ctx.lineTo(i * 60 - 180, H); ctx.stroke(); } ctx.globalAlpha = 1; // Pieniądze money.forEach(m => { ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.spin); ctx.font = "26px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("💰", 0, 0); ctx.restore(); }); // Dokumenty skarbowe papers.forEach(p => { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate( Math.atan2(p.vy, p.vx) + Math.PI / 2 ); ctx.font = "34px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("📑", 0, 0); ctx.restore(); }); // Cząsteczki particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = "#ffe66d"; ctx.fillRect( p.x, p.y, p.size, p.size ); }); ctx.globalAlpha = 1; // Kaczka ctx.save(); ctx.translate( duck.x, duck.y ); const tilt = duck.vx * .0008; ctx.rotate(tilt); ctx.font = "52px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText( turbo > 0 ? "🦆💨" : "🦆", 0, 0 ); ctx.restore(); if (paused) { ctx.fillStyle = "#fff"; ctx.font = "800 16px system-ui"; ctx.fillText( "⏸ PAUZA", 18, 34 ); } ctx.restore(); } </script>
+
+</body> </html>
